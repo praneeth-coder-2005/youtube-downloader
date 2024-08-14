@@ -9,9 +9,25 @@ function downloadVideo() {
 
     status.textContent = "Processing...";
 
-    // Mocking the API request for demonstration purposes
-    // Replace this with actual API call or backend logic
-    setTimeout(() => {
-        status.innerHTML = `Download ready: <a href="https://fakeurl.com/download?video=${encodeURIComponent(url)}" target="_blank">Click here to download</a>`;
-    }, 2000);
+    fetch(`/.netlify/functions/youtube-download?url=${encodeURIComponent(url)}`)
+        .then(response => {
+            if (response.ok) {
+                return response.blob();
+            } else {
+                return response.text().then(text => { throw new Error(text); });
+            }
+        })
+        .then(blob => {
+            const downloadUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = 'video.mp4';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            status.textContent = "Download ready!";
+        })
+        .catch(error => {
+            status.textContent = `Error: ${error.message}`;
+        });
 }
